@@ -5,13 +5,13 @@ import Header from '@/components/layout/Header'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createServerSupabase()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) redirect('/login')
 
   const { data: profile } = await supabase
     .from('users')
     .select('*')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .single()
 
   if (!profile) redirect('/login')
@@ -28,3 +28,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     </div>
   )
 }
+```
+
+Kaydedin, sonra:
+```
+git add .
+git commit -m "session fix"
+git push
