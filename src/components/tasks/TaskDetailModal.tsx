@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Send, Trash2, Calendar, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
-import { cn, getInitials, PRIORITY_LABELS, STATUS_LABELS, PRIORITY_STYLES } from '@/lib/utils'
+import { cn, getInitials, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/utils'
 import type { Task, User as UserType, Comment } from '@/types'
 
 const PRIORITY_STYLES_MAP: Record<string, string> = {
