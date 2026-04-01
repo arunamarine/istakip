@@ -1,29 +1,43 @@
-import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase-server'
-import Sidebar from '@/components/layout/Sidebar'
-import Header from '@/components/layout/Header'
+'use client'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import Header from './Header'
+import Sidebar from './Sidebar'
+import type { User } from '@/types'
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createServerSupabase()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/login')
+export default function AuthGuard({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', session.user.id)
-    .single()
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        router.push('/login')
+        return
+      }
+      const { data: profile } = await supabase
+        .from('users').select('*').eq('id', session.user.id).single()
+      if (!profile) { router.push('/login'); return }
+      setUser(profile)
+      setLoading(false)
+    })
+  }, [])
 
-  if (!profile) redirect('/login')
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen text-gray-400">
+      Yükleniyor...
+    </div>
+  )
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <Header user={profile} />
+      <Header user={user!} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar role={profile.role} />
-        <main className="flex-1 overflow-y-auto bg-stone-50 p-5">
-          {children}
-        </main>
+        <Sidebar role={user!.role} />
+        <main className="flex-1 overflow-y-auto bg-stone-50 p-5">{children}</main>
       </div>
     </div>
   )
