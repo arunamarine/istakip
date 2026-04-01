@@ -17,12 +17,11 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
+   if (error) {
       setError('E-posta veya şifre hatalı.')
       setLoading(false)
     } else {
-      router.push('/dashboard/kanban')
-      router.refresh()
+      window.location.href = '/dashboard/kanban'
     }
   }
 
