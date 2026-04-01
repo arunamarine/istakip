@@ -28,10 +28,3 @@ export default async function DashboardLayout({ children }: { children: React.Re
     </div>
   )
 }
-```
-
-Kaydedin, sonra:
-```
-git add .
-git commit -m "session fix"
-git push
