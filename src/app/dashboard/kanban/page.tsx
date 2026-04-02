@@ -85,12 +85,10 @@ export default function KanbanPage() {
     <DndContext sensors={sensors} onDragStart={e => setActiveTask(tasks.find(t => t.id === e.active.id) ?? null)} onDragEnd={handleDragEnd}>
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-xl font-semibold text-gray-900">Kanban Board</h1>
-        {currentUser.role === 'manager' && (
-          <button onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors">
-            <Plus className="w-4 h-4" /> Görev Ekle
-          </button>
-        )}
+        <button onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors ml-2">
+          <Plus className="w-4 h-4" /> Görev Ekle
+        </button>
       </div>
 
       <StatsBar tasks={tasks} />

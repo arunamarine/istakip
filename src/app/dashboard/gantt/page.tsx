@@ -75,12 +75,10 @@ export default function GanttPage() {
             className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">Bugün</button>
           <button onClick={() => setWindowStart(d => addDays(d, 7))}
             className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">İleri →</button>
-          {currentUser.role === 'manager' && (
-            <button onClick={() => setShowAdd(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors ml-2">
-              <Plus className="w-4 h-4" /> Görev Ekle
-            </button>
-          )}
+         <button onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors ml-2">
+          <Plus className="w-4 h-4" /> Görev Ekle
+        </button>
         </div>
       </div>
 
