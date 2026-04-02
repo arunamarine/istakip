@@ -68,6 +68,16 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
                   {getInitials(ta.user.name)}
                 </div>
               ))
+            <div className="flex ml-auto gap-1">
+          {task.task_assignees && task.task_assignees.length > 0
+            ? task.task_assignees.map((ta: any) => ta.user && (
+                <div key={ta.user_id}
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
+                  style={{ background: ta.user.avatar_color, color: '#0F6E56' }}
+                  title={ta.user.name}>
+                  {getInitials(ta.user.name)}
+                </div>
+              ))
             : task.assignee && (
                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
                   style={{ background: task.assignee.avatar_color, color: '#0F6E56' }}
@@ -76,6 +86,7 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
                 </div>
               )
           }
+        </div>
         </div>
       </div>
     </div>
