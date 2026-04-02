@@ -62,22 +62,22 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
     if (data) setComments(data)
   }
 
-   async function handleStatusChange(newStatus: string) {
+    async function handleStatusChange(newStatus: string) {
     setStatus(newStatus as any)
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
-    onUpdate()
-  }
-
-  async function handleSendComment() {
-    if (!commentText.trim()) return
-    setSending(true)
-    await supabase.from('comments').insert({
-      task_id: task.id,
-      user_id: currentUser.id,
-      content: commentText.trim(),
-    })
-    setCommentText('')
-    setSending(false)
+    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
+    if (!error) {
+      if (task.created_by !== currentUser.id) {
+        await fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: task.created_by,
+            message: `🔄 <b>Görev Durumu Güncellendi</b>\n\n<b>${task.title}</b>\n\nYeni durum: ${{ todo: 'Bekliyor', doing: 'Devam Ediyor', done: 'Tamamlandı ✅', cancelled: 'İptal Edildi ❌' }[newStatus]}\n\nhttps://istakip-sigma.vercel.app`,
+          }),
+        })
+      }
+      onUpdate()
+    }
   }
 
   async function handleDelete() {
