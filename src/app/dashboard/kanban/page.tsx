@@ -39,7 +39,7 @@ export default function KanbanPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
-  const load = useCallback(async () => {
+    const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const [{ data: profile }, { data: allUsers }, { data: allTasks }] = await Promise.all([
@@ -125,7 +125,7 @@ export default function KanbanPage() {
           currentUser={currentUser}
           users={users}
           onClose={() => setSelectedTask(null)}
-          onUpdate={() => { load(); setSelectedTask(null) }}
+          onUpdate={async () => { await load(); setSelectedTask(null) }}
         />
       )}
       {showAdd && (
