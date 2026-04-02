@@ -62,10 +62,11 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
     if (data) setComments(data)
   }
 
-  async function handleStatusChange(newStatus: string) {
+   async function handleStatusChange(newStatus: string) {
     setStatus(newStatus as any)
     await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
     onUpdate()
+    onClose()
   }
 
   async function handleSendComment() {
