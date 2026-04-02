@@ -64,9 +64,8 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
   async function handleStatusChange(newStatus: string) {
     setStatus(newStatus as any)
     const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
-    if (!error) {
-      if (task.created_by !== currentUser.id) {
-        await fetch('/api/telegram', {
+   {
+      await fetch('/api/telegram', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -77,7 +76,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
       }
       onUpdate()
     }
-  }
 
   async function handleSendComment() {
     if (!commentText.trim()) return
