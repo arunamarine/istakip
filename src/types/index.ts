@@ -26,7 +26,10 @@ export interface Task {
   assignee?: User
   creator?: User
   comments?: Comment[]
+task_assignees?: { user_id: string; user?: { id: string; name: string; avatar_color: string } }[]
 }
+
+
 
 export interface Comment {
   id: string
