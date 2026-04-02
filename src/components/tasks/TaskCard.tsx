@@ -29,6 +29,9 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
       className={cn(
         'bg-white border border-gray-200 rounded-xl p-3.5 cursor-pointer select-none',
         'hover:border-teal-300 hover:shadow-sm transition-all',
+        task.status === 'todo' && 'border-l-4 border-l-red-300',
+        task.status === 'doing' && 'border-l-4 border-l-amber-400',
+        task.status === 'done' && 'border-l-4 border-l-teal-400',
         dragging && 'opacity-40 shadow-lg'
       )}
     >

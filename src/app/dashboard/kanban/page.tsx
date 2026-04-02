@@ -11,10 +11,10 @@ import TaskDetailModal from '@/components/tasks/TaskDetailModal'
 import AddTaskModal from '@/components/tasks/AddTaskModal'
 import StatsBar from '@/components/ui/StatsBar'
 
-const COLUMNS: { id: TaskStatus; label: string; color: string }[] = [
-  { id: 'todo',  label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600' },
-  { id: 'doing', label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700' },
-  { id: 'done',  label: 'Tamamlandı',    color: 'bg-teal-100 text-teal-700' },
+const COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }[] = [
+  { id: 'todo',  label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600',   bg: 'bg-gray-50' },
+  { id: 'doing', label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700', bg: 'bg-amber-50/30' },
+  { id: 'done',  label: 'Tamamlandı',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
 ]
 
 function SortableCard({ task, onClick }: { task: Task; onClick: () => void }) {
@@ -95,7 +95,7 @@ export default function KanbanPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {COLUMNS.map(col => (
-          <div key={col.id} id={col.id} className="bg-white border border-gray-200 rounded-2xl p-4">
+          <div key={col.id} id={col.id} className={`${col.bg} border border-gray-200 rounded-2xl p-4`}>
             <div className="flex items-center justify-between mb-3">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${col.color}`}>{col.label}</span>
               <span className="text-xs text-gray-400 font-medium">{colTasks(col.id).length}</span>
