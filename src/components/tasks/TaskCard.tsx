@@ -1,5 +1,5 @@
 'use client'
-import { cn, isDueNear, isDueOver, getInitials, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/utils'
+import { cn, isDueNear, isDueOver, getInitials, PRIORITY_LABELS } from '@/lib/utils'
 import { MessageSquare, Calendar } from 'lucide-react'
 import type { Task } from '@/types'
 
@@ -19,6 +19,10 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
   const near = isDueNear(task.due_date)
   const over = isDueOver(task.due_date) && task.status !== 'done'
 
+  const assignees = task.task_assignees && task.task_assignees.length > 0
+    ? task.task_assignees.filter((ta: any) => ta.user).map((ta: any) => ta.user)
+    : task.assignee ? [task.assignee] : []
+
   return (
     <div
       onClick={onClick}
@@ -31,12 +35,10 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
       <p className="text-sm font-medium text-gray-900 mb-2.5 leading-snug">{task.title}</p>
 
       <div className="flex items-center gap-1.5 flex-wrap">
-        {/* Priority */}
         <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium', PRIORITY_STYLES[task.priority])}>
           {PRIORITY_LABELS[task.priority]}
         </span>
 
-        {/* Due date */}
         {task.due_date && (
           <span className={cn(
             'text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1',
@@ -49,44 +51,22 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
           </span>
         )}
 
-        {/* Comment count */}
         {task.comments && task.comments.length > 0 && (
-          <span className="text-[11px] text-gray-400 flex items-center gap-1 ml-auto">
+          <span className="text-[11px] text-gray-400 flex items-center gap-1">
             <MessageSquare className="w-3 h-3" />
             {task.comments.length}
           </span>
         )}
 
-        {/* Assignee avatar */}
         <div className="flex ml-auto gap-1">
-          {task.task_assignees && task.task_assignees.length > 0
-            ? task.task_assignees.map((ta: any) => ta.user && (
-                <div key={ta.user_id}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
-                  style={{ background: ta.user.avatar_color, color: '#0F6E56' }}
-                  title={ta.user.name}>
-                  {getInitials(ta.user.name)}
-                </div>
-              ))
-            <div className="flex ml-auto gap-1">
-          {task.task_assignees && task.task_assignees.length > 0
-            ? task.task_assignees.map((ta: any) => ta.user && (
-                <div key={ta.user_id}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
-                  style={{ background: ta.user.avatar_color, color: '#0F6E56' }}
-                  title={ta.user.name}>
-                  {getInitials(ta.user.name)}
-                </div>
-              ))
-            : task.assignee && (
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
-                  style={{ background: task.assignee.avatar_color, color: '#0F6E56' }}
-                  title={task.assignee.name}>
-                  {getInitials(task.assignee.name)}
-                </div>
-              )
-          }
-        </div>
+          {assignees.map((a: any) => (
+            <div key={a.id}
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
+              style={{ background: a.avatar_color, color: '#0F6E56' }}
+              title={a.name}>
+              {getInitials(a.name)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
