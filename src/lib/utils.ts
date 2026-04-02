@@ -27,13 +27,13 @@ export function getInitials(name: string) {
 }
 
 export const AVATAR_COLORS = [
-  { bg: '#E1F5EE', text: '#0F6E56' },
-  { bg: '#EEEDFE', text: '#534AB7' },
-  { bg: '#E6F1FB', text: '#185FA5' },
-  { bg: '#FAECE7', text: '#993C1D' },
-  { bg: '#FAEEDA', text: '#854F0B' },
-  { bg: '#EAF3DE', text: '#3B6D11' },
-  { bg: '#FBEAF0', text: '#993556' },
+  { bg: '#1D9E75', text: '#ffffff' },
+  { bg: '#534AB7', text: '#ffffff' },
+  { bg: '#185FA5', text: '#ffffff' },
+  { bg: '#D85A30', text: '#ffffff' },
+  { bg: '#BA7517', text: '#ffffff' },
+  { bg: '#3B6D11', text: '#ffffff' },
+  { bg: '#993556', text: '#ffffff' },
 ]
 
 export function getAvatarColor(index: number) {
@@ -45,5 +45,5 @@ export const PRIORITY_LABELS: Record<string, string> = {
 }
 
 export const STATUS_LABELS: Record<string, string> = {
-  todo: 'Bekliyor', doing: 'Devam Ediyor', done: 'Tamamlandı'
+  todo: 'Bekliyor', doing: 'Devam Ediyor', done: 'Tamamlandı', cancelled: 'İptal Edildi'
 }

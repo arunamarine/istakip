@@ -32,6 +32,7 @@ export default function TaskCard({ task, onClick, dragging }: Props) {
         task.status === 'todo' && 'border-l-4 border-l-red-300',
         task.status === 'doing' && 'border-l-4 border-l-amber-400',
         task.status === 'done' && 'border-l-4 border-l-teal-400',
+	task.status === 'cancelled' && 'border-l-4 border-l-red-400 opacity-60',
         dragging && 'opacity-40 shadow-lg'
       )}
     >

@@ -12,9 +12,10 @@ import AddTaskModal from '@/components/tasks/AddTaskModal'
 import StatsBar from '@/components/ui/StatsBar'
 
 const COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }[] = [
-  { id: 'todo',  label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600',   bg: 'bg-gray-50' },
-  { id: 'doing', label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700', bg: 'bg-amber-50/30' },
-  { id: 'done',  label: 'Tamamlandı',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
+  { id: 'todo',      label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600',   bg: 'bg-gray-50' },
+  { id: 'doing',     label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700', bg: 'bg-amber-50/30' },
+  { id: 'done',      label: 'Tamamlandı',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
+  { id: 'cancelled', label: 'İptal Edildi',  color: 'bg-red-100 text-red-600',     bg: 'bg-red-50/30' },
 ]
 
 function SortableCard({ task, onClick }: { task: Task; onClick: () => void }) {
@@ -93,7 +94,7 @@ export default function KanbanPage() {
 
       <StatsBar tasks={tasks} />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {COLUMNS.map(col => (
           <div key={col.id} id={col.id} className={`${col.bg} border border-gray-200 rounded-2xl p-4`}>
             <div className="flex items-center justify-between mb-3">

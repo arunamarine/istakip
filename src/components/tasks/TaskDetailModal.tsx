@@ -12,9 +12,10 @@ const PRIORITY_STYLES_MAP: Record<string, string> = {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'todo',  label: 'Bekliyor' },
-  { value: 'doing', label: 'Devam Ediyor' },
-  { value: 'done',  label: 'Tamamlandı' },
+  { value: 'todo',      label: 'Bekliyor' },
+  { value: 'doing',     label: 'Devam Ediyor' },
+  { value: 'done',      label: 'Tamamlandı' },
+  { value: 'cancelled', label: 'İptal Edildi' },
 ]
 
 interface Props {

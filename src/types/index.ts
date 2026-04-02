@@ -1,5 +1,5 @@
 export type Role = 'manager' | 'staff'
-export type TaskStatus = 'todo' | 'doing' | 'done'
+export type TaskStatus = 'todo' | 'doing' | 'done' | 'cancelled'
 export type Priority = 'low' | 'mid' | 'high'
 
 export interface User {
