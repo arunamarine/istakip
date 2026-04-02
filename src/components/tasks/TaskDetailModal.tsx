@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { X, Send, Trash2, Calendar, User } from 'lucide-react'
+import { X, Send, Trash2, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn, getInitials, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/utils'
 import type { Task, User as UserType, Comment } from '@/types'
@@ -38,7 +38,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
 
   useEffect(() => {
     loadComments()
-    // Realtime comments
     const channel = supabase
       .channel(`comments-${task.id}`)
       .on('postgres_changes', {
@@ -62,7 +61,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
     if (data) setComments(data)
   }
 
-    async function handleStatusChange(newStatus: string) {
+  async function handleStatusChange(newStatus: string) {
     setStatus(newStatus as any)
     const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
     if (!error) {
@@ -78,6 +77,18 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
       }
       onUpdate()
     }
+  }
+
+  async function handleSendComment() {
+    if (!commentText.trim()) return
+    setSending(true)
+    await supabase.from('comments').insert({
+      task_id: task.id,
+      user_id: currentUser.id,
+      content: commentText.trim(),
+    })
+    setCommentText('')
+    setSending(false)
   }
 
   async function handleDelete() {
@@ -96,7 +107,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl">
-        {/* Header */}
         <div className="flex items-start gap-3 p-5 pb-4 border-b border-gray-100">
           <div className="flex-1">
             <h2 className="text-[17px] font-semibold text-gray-900 leading-snug">{task.title}</h2>
@@ -117,7 +127,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Description */}
           {task.description && (
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Açıklama</p>
@@ -125,14 +134,13 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             </div>
           )}
 
-          {/* Meta */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-xs text-gray-400 mb-1">Atanan</p>
               {assignee ? (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium"
-                    style={{ background: assignee.avatar_color, color: '#0F6E56' }}>
+                    style={{ background: assignee.avatar_color, color: '#ffffff' }}>
                     {getInitials(assignee.name)}
                   </div>
                   <span className="text-sm font-medium text-gray-800">{assignee.name}</span>
@@ -145,11 +153,10 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             </div>
           </div>
 
-          {/* Status */}
           <div>
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Durum</p>
             {canEdit ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {STATUS_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
@@ -170,7 +177,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             )}
           </div>
 
-          {/* Comments */}
           <div>
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
               Yorumlar ({comments.length})
@@ -183,7 +189,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
                 <div key={c.id} className="flex gap-2.5">
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-medium flex-shrink-0"
-                    style={{ background: c.user?.avatar_color ?? '#E5E7EB', color: '#0F6E56' }}
+                    style={{ background: c.user?.avatar_color ?? '#E5E7EB', color: '#ffffff' }}
                   >
                     {c.user ? getInitials(c.user.name) : '?'}
                   </div>
@@ -201,7 +207,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               <div ref={commentEndRef} />
             </div>
 
-            {/* Comment input */}
             <div className="flex gap-2 mt-3">
               <input
                 value={commentText}
@@ -221,7 +226,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           </div>
         </div>
 
-        {/* Footer */}
         {currentUser.role === 'manager' && (
           <div className="p-4 pt-0 border-t border-gray-100 mt-2">
             <button
