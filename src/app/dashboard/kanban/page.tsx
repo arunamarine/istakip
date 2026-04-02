@@ -44,7 +44,7 @@ export default function KanbanPage() {
     const [{ data: profile }, { data: allUsers }, { data: allTasks }] = await Promise.all([
       supabase.from('users').select('*').eq('id', user.id).single(),
       supabase.from('users').select('*').order('name'),
-      supabase.from('tasks').select('*, assignee:users!tasks_assignee_id_fkey(*), comments(id)').order('created_at', { ascending: false }),
+      supabase.from('tasks').select('*, assignee:users!tasks_assignee_id_fkey(*), comments(id), task_assignees(user_id, user:users(id,name,avatar_color))').order('created_at', { ascending: false }),
     ])
     if (profile) setCurrentUser(profile)
     if (allUsers) setUsers(allUsers)
