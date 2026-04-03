@@ -70,11 +70,19 @@ export default function KanbanPage() {
     setActiveTask(null)
     if (!over) return
     const taskId = active.id as string
-    const overId  = over.id as string
-    const newStatus = COLUMNS.find(c => c.id === overId)?.id
-    if (newStatus) {
+    const overId = over.id as string
+
+    // Sütun ID'si mi yoksa kart ID'si mi kontrol et
+    let newStatus = COLUMNS.find(c => c.id === overId)?.id
+    if (!newStatus) {
+      // Kart üzerine bırakıldıysa o kartın durumunu al
+      const overTask = tasks.find(t => t.id === overId)
+      if (overTask) newStatus = overTask.status
+    }
+
+    if (newStatus && newStatus !== tasks.find(t => t.id === taskId)?.status) {
       await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId)
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus! } : t))
     }
   }
 
