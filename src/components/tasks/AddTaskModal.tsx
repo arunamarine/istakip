@@ -47,10 +47,23 @@ export default function AddTaskModal({ currentUserId, users, onClose, onAdd }: P
 
     if (taskError || !task) { setError('Görev eklenirken hata oluştu.'); setLoading(false); return }
 
-    if (selectedUsers.length > 0) {
+if (selectedUsers.length > 0) {
       await supabase.from('task_assignees').insert(
         selectedUsers.map(uid => ({ task_id: task.id, user_id: uid }))
       )
+
+      for (const uid of selectedUsers) {
+        if (uid !== currentUserId) {
+          await fetch('/api/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: uid,
+              message: `📋 <b>Yeni Görev Atandı</b>\n\n${form.title}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayı Aç</a>`,
+            }),
+          })
+        }
+      }
     }
 
     setLoading(false)
