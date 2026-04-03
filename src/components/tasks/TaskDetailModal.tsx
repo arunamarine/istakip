@@ -64,18 +64,24 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
   async function handleStatusChange(newStatus: string) {
     setStatus(newStatus as any)
     const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', task.id)
-   {
-      await fetch('/api/telegram', {
+    if (!error) {
+      try {
+        const res = await fetch('/api/telegram', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: task.created_by,
-            message: `🔄 <b>Görev Durumu Güncellendi</b>\n\n<b>${task.title}</b>\n\nYeni durum: ${{ todo: 'Bekliyor', doing: 'Devam Ediyor', done: 'Tamamlandı ✅', cancelled: 'İptal Edildi ❌' }[newStatus]}\n\nhttps://istakip-sigma.vercel.app`,
+            user_id: currentUser.id,
+            message: `🔄 Test: ${task.title} → ${newStatus}`,
           }),
         })
+        const data = await res.json()
+        console.log('Telegram yanıt:', data)
+      } catch (e) {
+        console.error('Telegram hata:', e)
       }
       onUpdate()
     }
+  }
 
   async function handleSendComment() {
     if (!commentText.trim()) return
