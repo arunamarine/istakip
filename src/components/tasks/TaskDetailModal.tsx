@@ -71,7 +71,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: currentUser.id,
-            message: `🔄 Test: ${task.title} → ${newStatus}`,
+            message: `🔄 <b>Görev Durumu Güncellendi</b>\n\n📋 ${task.title}\n\nYeni durum: ${{ todo: '⏳ Bekliyor', doing: '🔵 Devam Ediyor', done: '✅ Tamamlandı', cancelled: '❌ İptal Edildi' }[newStatus] || newStatus}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayı Aç</a>`,
           }),
         })
         const data = await res.json()
