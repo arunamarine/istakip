@@ -53,7 +53,7 @@ if (selectedUsers.length > 0) {
       )
 
       for (const uid of selectedUsers) {
-        if (uid !== currentUserId) {
+        
           await fetch('/api/telegram', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -64,7 +64,7 @@ if (selectedUsers.length > 0) {
           })
         }
       }
-    }
+    
 
     setLoading(false)
     onAdd()
