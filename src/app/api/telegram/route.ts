@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(req: NextRequest) {
   const { user_id, message } = await req.json()
-  const supabase = createServerSupabase()
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const { data: user } = await supabase
     .from('users')
@@ -12,7 +16,7 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (!user?.telegram_id) {
-    return NextResponse.json({ error: 'Telegram ID bulunamadı' }, { status: 404 })
+    return NextResponse.json({ error: 'Telegram ID bulunamadı', user_id }, { status: 404 })
   }
 
   const res = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
