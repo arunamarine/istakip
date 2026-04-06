@@ -37,7 +37,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       <Header user={user!} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar role={user!.role} />
-        <main className="flex-1 overflow-y-auto bg-stone-50 p-5">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-stone-50 p-3 md:p-5 pb-20 md:pb-5">{children}</main>
       </div>
     </div>
   )

@@ -35,7 +35,7 @@ export default function Header({ user }: { user: User }) {
           >
             {getInitials(user.name)}
           </div>
-          <div className="hidden sm:block">
+          <div className="hidden lg:block">
             <p className="text-sm font-medium text-gray-900 leading-none">{user.name}</p>
             <p className="text-xs text-gray-400 mt-0.5">
               {user.role === 'manager' ? 'Yönetici' : 'Çalışan'}
