@@ -5,6 +5,7 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { createClient } from '@/lib/supabase'
 import { Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Task, User, TaskStatus } from '@/types'
 import TaskCard from '@/components/tasks/TaskCard'
 import TaskDetailModal from '@/components/tasks/TaskDetailModal'
@@ -35,6 +36,7 @@ export default function KanbanPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [mobileCol, setMobileCol] = useState<TaskStatus>('todo')
   const supabase = createClient()
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
@@ -102,7 +104,7 @@ export default function KanbanPage() {
 
       <StatsBar tasks={tasks} />
 
-      <div className="grid grid-cols-4 gap-4">
+       <div className="hidden md:grid grid-cols-4 gap-4">
         {COLUMNS.map(col => (
           <div key={col.id} id={col.id} className={`${col.bg} border border-gray-200 rounded-2xl p-4`}>
             <div className="flex items-center justify-between mb-3">
@@ -123,6 +125,30 @@ export default function KanbanPage() {
         ))}
       </div>
 
+<div className="md:hidden">
+        <div className="flex gap-1 mb-3 bg-gray-100 p-1 rounded-xl">
+          {COLUMNS.map(col => (
+            <button key={col.id}
+              onClick={() => setMobileCol(col.id)}
+              className={cn(
+                'flex-1 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                mobileCol === col.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+              )}>
+              {col.label} <span className="ml-1 text-gray-400">{colTasks(col.id).length}</span>
+            </button>
+          ))}
+        </div>
+        <div className={`border border-gray-200 rounded-2xl p-4 ${COLUMNS.find(c=>c.id===mobileCol)?.bg}`}>
+          <div className="space-y-2 min-h-[120px]">
+            {colTasks(mobileCol).length === 0 && (
+              <p className="text-xs text-gray-300 text-center py-8">Görev yok</p>
+            )}
+            {colTasks(mobileCol).map(task => (
+              <TaskCard key={task.id} task={task} onClick={() => setSelectedTask(task)} />
+            ))}
+          </div>
+        </div>
+      </div>
       <DragOverlay>
         {activeTask && <TaskCard task={activeTask} onClick={() => {}} />}
       </DragOverlay>
