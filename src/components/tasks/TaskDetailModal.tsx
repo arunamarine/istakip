@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, useRef } from 'react'
 import { X, Send, Trash2, Calendar, Pencil, Check, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
@@ -14,14 +14,14 @@ const PRIORITY_STYLES_MAP: Record<string, string> = {
 const STATUS_OPTIONS = [
   { value: 'todo',      label: 'Bekliyor' },
   { value: 'doing',     label: 'Devam Ediyor' },
-  { value: 'done',      label: 'Tamamlandi' },
-  { value: 'cancelled', label: 'Iptal Edildi' },
+  { value: 'done',      label: 'Tamamlandı' },
+  { value: 'cancelled', label: 'İptal Edildi' },
 ]
 
 const PRIORITY_OPTIONS = [
-  { value: 'low',  label: 'Dusuk' },
+  { value: 'low',  label: 'Düşük' },
   { value: 'mid',  label: 'Orta' },
-  { value: 'high', label: 'Yuksek' },
+  { value: 'high', label: 'Yüksek' },
 ]
 
 interface Props {
@@ -141,7 +141,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: currentUser.id,
-            message: `🔄 <b>Gorev Durumu Guncellendi</b>\n\n📋 ${task.title}\n\nYeni durum: ${{ todo: '⏳ Bekliyor', doing: '🔵 Devam Ediyor', done: '✅ Tamamlandi', cancelled: '❌ Iptal Edildi' }[newStatus] || newStatus}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayi Ac</a>`,
+            message: `🔄 <b>Gorev Durumu Guncellendi</b>\n\n📋 ${task.title}\n\nYeni durum: ${{ todo: '⏳ Bekliyor', doing: '🔵 Devam Ediyor', done: '✅ Tamamlandı', cancelled: '❌ İptal Edildi' }[newStatus] || newStatus}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayi Ac</a>`,
           }),
         })
       } catch (e) {}
@@ -162,7 +162,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
   }
 
   async function handleDelete() {
-    if (!confirm('Bu gorevi silmek istediginize emin misiniz?')) return
+    if (!confirm('Bu Görevi silmek istediginize emin misiniz?')) return
     await supabase.from('tasks').delete().eq('id', task.id)
     onClose()
     onUpdate()
@@ -222,7 +222,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           {editing ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Aciklama</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Açıklama</label>
                 <textarea
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
@@ -232,7 +232,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Oncelik</label>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Öncelik</label>
                   <select value={editPriority} onChange={e => setEditPriority(e.target.value as any)}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-400 bg-white">
                     {PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
@@ -253,20 +253,20 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             <>
               {task.description && (
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Aciklama</p>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Açıklama</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{task.description}</p>
                 </div>
               )}
 
-              {/* Atanan kisiler */}
+              {/* Atanan Kişiler */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Atanan Kisiler</p>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Atanan Kişiler</p>
                   {(currentUser.role === 'manager' || currentUser.id === task.created_by) && (
                     <button onClick={() => setEditingAssignees(!editingAssignees)}
                       className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800">
                       <UserPlus className="w-3.5 h-3.5" />
-                      {editingAssignees ? 'Iptal' : 'Duzenle'}
+                      {editingAssignees ? 'İptal' : 'Düzenle'}
                     </button>
                   )}
                 </div>
@@ -300,7 +300,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {assigneeUsers.length === 0 ? (
-                      <span className="text-sm text-gray-400">Atanmamis</span>
+                      <span className="text-sm text-gray-400">Atanmamış</span>
                     ) : assigneeUsers.map(u => (
                       <div key={u.id} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
@@ -315,7 +315,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               </div>
 
               <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-1">Olusturan</p>
+                <p className="text-xs text-gray-400 mb-1">Oluşturan</p>
                 <span className="text-sm font-medium text-gray-800">{creator?.name ?? '—'}</span>
               </div>
 
@@ -349,7 +349,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               </p>
               <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                 {comments.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-4">Henuz yorum yok.</p>
+                  <p className="text-sm text-gray-400 text-center py-4">Henüz yorum yok.</p>
                 )}
                 {comments.map(c => (
                   <div key={c.id} className="flex gap-2.5">
@@ -391,7 +391,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           <div className="p-4 pt-0 border-t border-gray-100 mt-2">
             <button onClick={handleDelete}
               className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded">
-              <Trash2 className="w-3.5 h-3.5" /> Gorevi sil
+              <Trash2 className="w-3.5 h-3.5" /> Görevi sil
             </button>
           </div>
         )}
