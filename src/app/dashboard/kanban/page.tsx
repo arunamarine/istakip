@@ -15,8 +15,8 @@ import StatsBar from '@/components/ui/StatsBar'
 const COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }[] = [
   { id: 'todo',      label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600',   bg: 'bg-gray-50' },
   { id: 'doing',     label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700', bg: 'bg-amber-50/30' },
-  { id: 'done',      label: 'Tamamlandi',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
-  { id: 'cancelled', label: 'Iptal Edildi',  color: 'bg-red-100 text-red-600',     bg: 'bg-red-50/30' },
+  { id: 'done',      label: 'Tamamlandı',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
+  { id: 'cancelled', label: 'İptal Edildi',  color: 'bg-red-100 text-red-600',     bg: 'bg-red-50/30' },
 ]
 
 function SortableCard({ task, onClick }: { task: Task; onClick: () => void }) {
@@ -87,7 +87,7 @@ export default function KanbanPage() {
 
   const colTasks = (col: TaskStatus) => tasks.filter(t => t.status === col)
 
-  if (!currentUser) return <div className="flex items-center justify-center h-40 text-gray-400">Yukleniyor...</div>
+  if (!currentUser) return <div className="flex items-center justify-center h-40 text-gray-400">Yükleniyor...</div>
 
   return (
     <DndContext sensors={sensors} onDragStart={e => setActiveTask(tasks.find(t => t.id === e.active.id) ?? null)} onDragEnd={handleDragEnd}>
@@ -95,7 +95,7 @@ export default function KanbanPage() {
         <h1 className="text-xl font-semibold text-gray-900">Kanban Board</h1>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors ml-2">
-          <Plus className="w-4 h-4" /> Gorev Ekle
+          <Plus className="w-4 h-4" /> Görev Ekle
         </button>
       </div>
 
