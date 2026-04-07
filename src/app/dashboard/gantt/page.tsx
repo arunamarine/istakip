@@ -182,7 +182,7 @@ export default function GanttPage() {
           onClose={() => setSelectedTask(null)} onUpdate={() => { load(); setSelectedTask(null) }} />
       )}
       {showAdd && (
-        <AddTaskModal currentUserId={currentUser.id} users={users}
+        <AddTaskModal currentUserId={currentUser.id} currentUserRole={currentUser.role} users={users}
           onClose={() => setShowAdd(false)} onAdd={load} />
       )}
     </div>
