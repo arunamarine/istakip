@@ -262,7 +262,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Atanan Kisiler</p>
-                  {currentUser.role === 'manager' && (
+                  {(currentUser.role === 'manager' || currentUser.id === task.created_by) && (
                     <button onClick={() => setEditingAssignees(!editingAssignees)}
                       className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800">
                       <UserPlus className="w-3.5 h-3.5" />
