@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { X, Send, Trash2, Calendar, Pencil, Check } from 'lucide-react'
+import { X, Send, Trash2, Calendar, Pencil, Check, UserPlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { cn, getInitials, PRIORITY_LABELS, STATUS_LABELS } from '@/lib/utils'
 import type { Task, User as UserType, Comment } from '@/types'
@@ -14,14 +14,14 @@ const PRIORITY_STYLES_MAP: Record<string, string> = {
 const STATUS_OPTIONS = [
   { value: 'todo',      label: 'Bekliyor' },
   { value: 'doing',     label: 'Devam Ediyor' },
-  { value: 'done',      label: 'Tamamlandı' },
-  { value: 'cancelled', label: 'İptal Edildi' },
+  { value: 'done',      label: 'Tamamlandi' },
+  { value: 'cancelled', label: 'Iptal Edildi' },
 ]
 
 const PRIORITY_OPTIONS = [
-  { value: 'low',  label: 'Düşük' },
+  { value: 'low',  label: 'Dusuk' },
   { value: 'mid',  label: 'Orta' },
-  { value: 'high', label: 'Yüksek' },
+  { value: 'high', label: 'Yuksek' },
 ]
 
 interface Props {
@@ -42,6 +42,8 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
   const [editDesc, setEditDesc] = useState(task.description || '')
   const [editPriority, setEditPriority] = useState(task.priority)
   const [editDue, setEditDue] = useState(task.due_date || '')
+  const [assignees, setAssignees] = useState<string[]>([])
+  const [editingAssignees, setEditingAssignees] = useState(false)
   const supabase = createClient()
   const commentEndRef = useRef<HTMLDivElement>(null)
 
@@ -49,6 +51,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
 
   useEffect(() => {
     loadComments()
+    loadAssignees()
     const channel = supabase
       .channel(`comments-${task.id}`)
       .on('postgres_changes', {
@@ -72,6 +75,14 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
     if (data) setComments(data)
   }
 
+  async function loadAssignees() {
+    const { data } = await supabase
+      .from('task_assignees')
+      .select('user_id')
+      .eq('task_id', task.id)
+    if (data) setAssignees(data.map((a: any) => a.user_id))
+  }
+
   async function handleSaveEdit() {
     await supabase.from('tasks').update({
       title: editTitle,
@@ -80,6 +91,43 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
       due_date: editDue || null,
     }).eq('id', task.id)
     setEditing(false)
+    onUpdate()
+  }
+
+  async function handleSaveAssignees(newAssignees: string[]) {
+    await supabase.from('task_assignees').delete().eq('task_id', task.id)
+    if (newAssignees.length > 0) {
+      await supabase.from('task_assignees').insert(
+        newAssignees.map(uid => ({ task_id: task.id, user_id: uid }))
+      )
+      await supabase.from('tasks').update({ assignee_id: newAssignees[0] }).eq('id', task.id)
+      for (const uid of newAssignees) {
+        if (uid !== currentUser.id) {
+          await fetch('/api/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: uid,
+              message: `📋 <b>Goreve Atandiniz</b>\n\n${task.title}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayi Ac</a>`,
+            }),
+          }).catch(() => {})
+        }
+      }
+      // Yoneticilere bildir
+      const managers = users.filter(u => u.role === 'manager' && u.id !== currentUser.id)
+      for (const manager of managers) {
+        await fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: manager.id,
+            message: `👥 <b>Gorev Atamalari Guncellendi</b>\n\n${task.title}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayi Ac</a>`,
+          }),
+        }).catch(() => {})
+      }
+    }
+    setAssignees(newAssignees)
+    setEditingAssignees(false)
     onUpdate()
   }
 
@@ -93,7 +141,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_id: currentUser.id,
-            message: `🔄 <b>Görev Durumu Güncellendi</b>\n\n📋 ${task.title}\n\nYeni durum: ${{ todo: '⏳ Bekliyor', doing: '🔵 Devam Ediyor', done: '✅ Tamamlandı', cancelled: '❌ İptal Edildi' }[newStatus] || newStatus}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayı Aç</a>`,
+            message: `🔄 <b>Gorev Durumu Guncellendi</b>\n\n📋 ${task.title}\n\nYeni durum: ${{ todo: '⏳ Bekliyor', doing: '🔵 Devam Ediyor', done: '✅ Tamamlandi', cancelled: '❌ Iptal Edildi' }[newStatus] || newStatus}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayi Ac</a>`,
           }),
         })
       } catch (e) {}
@@ -114,14 +162,14 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
   }
 
   async function handleDelete() {
-    if (!confirm('Bu görevi silmek istediğinize emin misiniz?')) return
+    if (!confirm('Bu gorevi silmek istediginize emin misiniz?')) return
     await supabase.from('tasks').delete().eq('id', task.id)
     onClose()
     onUpdate()
   }
 
-  const assignee = users.find(u => u.id === task.assignee_id)
-  const creator  = users.find(u => u.id === task.created_by)
+  const assigneeUsers = users.filter(u => assignees.includes(u.id))
+  const creator = users.find(u => u.id === task.created_by)
 
   return (
     <div
@@ -129,7 +177,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-xl">
-        {/* Header */}
         <div className="flex items-start gap-3 p-5 pb-4 border-b border-gray-100">
           <div className="flex-1">
             {editing ? (
@@ -156,7 +203,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           </div>
           <div className="flex items-center gap-2">
             {canEdit && !editing && (
-              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100" title="Düzenle">
+              <button onClick={() => setEditing(true)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100" title="Duzenle">
                 <Pencil className="w-4 h-4" />
               </button>
             )}
@@ -172,11 +219,10 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Edit fields */}
           {editing ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Açıklama</label>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Aciklama</label>
                 <textarea
                   value={editDesc}
                   onChange={e => setEditDesc(e.target.value)}
@@ -186,7 +232,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Öncelik</label>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Oncelik</label>
                   <select value={editPriority} onChange={e => setEditPriority(e.target.value as any)}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-400 bg-white">
                     {PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
@@ -207,28 +253,70 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             <>
               {task.description && (
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Açıklama</p>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Aciklama</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{task.description}</p>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Atanan</p>
-                  {assignee ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
-                        style={{ background: assignee.avatar_color, color: '#1f2937' }}>
-                        {getInitials(assignee.name)}
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{assignee.name}</span>
+              {/* Atanan kisiler */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Atanan Kisiler</p>
+                  {currentUser.role === 'manager' && (
+                    <button onClick={() => setEditingAssignees(!editingAssignees)}
+                      className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800">
+                      <UserPlus className="w-3.5 h-3.5" />
+                      {editingAssignees ? 'Iptal' : 'Duzenle'}
+                    </button>
+                  )}
+                </div>
+                {editingAssignees ? (
+                  <div>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {users.map(u => {
+                        const selected = assignees.includes(u.id)
+                        return (
+                          <div key={u.id}
+                            onClick={() => setAssignees(prev => selected ? prev.filter(id => id !== u.id) : [...prev, u.id])}
+                            className={cn(
+                              'flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all',
+                              selected ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
+                            )}>
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
+                              style={{ background: u.avatar_color, color: '#1f2937' }}>
+                              {getInitials(u.name)}
+                            </div>
+                            <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
+                            {selected && <span className="ml-auto text-teal-500 text-xs">✓</span>}
+                          </div>
+                        )
+                      })}
                     </div>
-                  ) : <span className="text-sm text-gray-400">Atanmamış</span>}
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Oluşturan</p>
-                  <span className="text-sm font-medium text-gray-800">{creator?.name ?? '—'}</span>
-                </div>
+                    <button onClick={() => handleSaveAssignees(assignees)}
+                      className="w-full py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl">
+                      Kaydet
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {assigneeUsers.length === 0 ? (
+                      <span className="text-sm text-gray-400">Atanmamis</span>
+                    ) : assigneeUsers.map(u => (
+                      <div key={u.id} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold"
+                          style={{ background: u.avatar_color, color: '#1f2937' }}>
+                          {getInitials(u.name)}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800">{u.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-xs text-gray-400 mb-1">Olusturan</p>
+                <span className="text-sm font-medium text-gray-800">{creator?.name ?? '—'}</span>
               </div>
 
               <div>
@@ -254,7 +342,6 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
             </>
           )}
 
-          {/* Comments */}
           {!editing && (
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
@@ -262,7 +349,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
               </p>
               <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                 {comments.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-4">Henüz yorum yok.</p>
+                  <p className="text-sm text-gray-400 text-center py-4">Henuz yorum yok.</p>
                 )}
                 {comments.map(c => (
                   <div key={c.id} className="flex gap-2.5">
@@ -304,7 +391,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           <div className="p-4 pt-0 border-t border-gray-100 mt-2">
             <button onClick={handleDelete}
               className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded">
-              <Trash2 className="w-3.5 h-3.5" /> Görevi sil
+              <Trash2 className="w-3.5 h-3.5" /> Gorevi sil
             </button>
           </div>
         )}
