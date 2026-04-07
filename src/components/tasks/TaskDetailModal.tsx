@@ -387,7 +387,7 @@ export default function TaskDetailModal({ task, currentUser, users, onClose, onU
           )}
         </div>
 
-        {currentUser.role === 'manager' && (
+        {(currentUser.role === 'manager' || currentUser.id === task.created_by) && (
           <div className="p-4 pt-0 border-t border-gray-100 mt-2">
             <button onClick={handleDelete}
               className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors px-2 py-1 rounded">
