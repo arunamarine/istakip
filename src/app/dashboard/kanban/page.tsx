@@ -15,8 +15,8 @@ import StatsBar from '@/components/ui/StatsBar'
 const COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }[] = [
   { id: 'todo',      label: 'Bekliyor',      color: 'bg-gray-100 text-gray-600',   bg: 'bg-gray-50' },
   { id: 'doing',     label: 'Devam Ediyor',  color: 'bg-amber-100 text-amber-700', bg: 'bg-amber-50/30' },
-  { id: 'done',      label: 'TamamlandÄ±',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
-  { id: 'cancelled', label: 'Ä°ptal Edildi',  color: 'bg-red-100 text-red-600',     bg: 'bg-red-50/30' },
+  { id: 'done',      label: 'Tamamlandi',    color: 'bg-teal-100 text-teal-700',   bg: 'bg-teal-50/30' },
+  { id: 'cancelled', label: 'Iptal Edildi',  color: 'bg-red-100 text-red-600',     bg: 'bg-red-50/30' },
 ]
 
 function SortableCard({ task, onClick }: { task: Task; onClick: () => void }) {
@@ -71,10 +71,10 @@ export default function KanbanPage() {
     const taskId = active.id as string
     const overId = over.id as string
 
-    // SÃ¼tun ID'si mi yoksa kart ID'si mi kontrol et
+    // Sutun ID'si mi yoksa kart ID'si mi kontrol et
     let newStatus = COLUMNS.find(c => c.id === overId)?.id
     if (!newStatus) {
-      // Kart Ã¼zerine bÄ±rakÄ±ldÄ±ysa o kartÄ±n durumunu al
+      // Kart uzerine birakildiysa o kartin durumunu al
       const overTask = tasks.find(t => t.id === overId)
       if (overTask) newStatus = overTask.status
     }
@@ -87,7 +87,7 @@ export default function KanbanPage() {
 
   const colTasks = (col: TaskStatus) => tasks.filter(t => t.status === col)
 
-  if (!currentUser) return <div className="flex items-center justify-center h-40 text-gray-400">YÃ¼kleniyor...</div>
+  if (!currentUser) return <div className="flex items-center justify-center h-40 text-gray-400">Yukleniyor...</div>
 
   return (
     <DndContext sensors={sensors} onDragStart={e => setActiveTask(tasks.find(t => t.id === e.active.id) ?? null)} onDragEnd={handleDragEnd}>
@@ -95,7 +95,7 @@ export default function KanbanPage() {
         <h1 className="text-xl font-semibold text-gray-900">Kanban Board</h1>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 px-4 py-2 bg-teal-400 hover:bg-teal-600 text-white text-sm font-medium rounded-xl transition-colors ml-2">
-          <Plus className="w-4 h-4" /> GÃ¶rev Ekle
+          <Plus className="w-4 h-4" /> Gorev Ekle
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export default function KanbanPage() {
             <SortableContext items={colTasks(col.id).map(t => t.id)} strategy={verticalListSortingStrategy} id={col.id}>
               <div className="space-y-2 min-h-[80px]">
                 {colTasks(col.id).length === 0 && (
-                  <p className="text-xs text-gray-300 text-center py-6">GÃ¶rev yok</p>
+                  <p className="text-xs text-gray-300 text-center py-6">Gorev yok</p>
                 )}
                 {colTasks(col.id).map(task => (
                   <SortableCard key={task.id} task={task} onClick={() => setSelectedTask(task)} />
@@ -138,7 +138,7 @@ export default function KanbanPage() {
         <div className={`border border-gray-200 rounded-2xl p-4 ${COLUMNS.find(c=>c.id===mobileCol)?.bg}`}>
           <div className="space-y-2 min-h-[120px]">
             {colTasks(mobileCol).length === 0 && (
-              <p className="text-xs text-gray-300 text-center py-8">GÃ¶rev yok</p>
+              <p className="text-xs text-gray-300 text-center py-8">Gorev yok</p>
             )}
             {colTasks(mobileCol).map(task => (
               <TaskCard key={task.id} task={task} onClick={() => setSelectedTask(task)} />
