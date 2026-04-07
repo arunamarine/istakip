@@ -26,8 +26,6 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
   }
 
   function toggleUser(id: string) {
-    const targetUser = users.find(u => u.id === id)
-    if (currentUserRole === 'staff' && targetUser?.role === 'manager') return
     setSelectedUsers(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     )
@@ -41,6 +39,11 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
     const staffAssignees = selectedUsers.filter(uid => {
       const u = users.find(x => x.id === uid)
       return u?.role === 'staff' || uid === currentUserId
+    })
+
+    const managerAssignees = selectedUsers.filter(uid => {
+      const u = users.find(x => x.id === uid)
+      return u?.role === 'manager'
     })
 
     const { data: task, error: taskError } = await supabase.from('tasks').insert({
@@ -67,29 +70,45 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               user_id: uid,
-              message: `📋 <b>Yeni Görev Atandı</b>\n\n${form.title}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayı Aç</a>`,
+              message: `📋 Yeni Görev Atandı\n\n${form.title}\n\nhttps://istakip-sigma.vercel.app`,
             }),
           }).catch(() => {})
         }
       }
     }
 
-    // Yöneticilere istek gönder (sadece çalışanlar için)
-    if (currentUserRole === 'staff') {
-      const managerIds = users.filter(u => u.role === 'manager').map(u => u.id)
-      for (const managerId of managerIds) {
+    for (const managerId of managerAssignees) {
+      await supabase.from('task_requests').insert({
+        task_id: task.id,
+        requester_id: currentUserId,
+        manager_id: managerId,
+        status: 'pending',
+      })
+      await fetch('/api/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: managerId,
+          message: `🔔 Yeni Görev İsteği\n\n${users.find(u=>u.id===currentUserId)?.name} yeni bir görev oluşturdu:\n${form.title}\n\nOnaylamak için:\nhttps://istakip-sigma.vercel.app/dashboard/requests`,
+        }),
+      }).catch(() => {})
+    }
+
+    if (currentUserRole === 'staff' && managerAssignees.length === 0) {
+      const allManagers = users.filter(u => u.role === 'manager')
+      for (const manager of allManagers) {
         await supabase.from('task_requests').insert({
           task_id: task.id,
           requester_id: currentUserId,
-          manager_id: managerId,
+          manager_id: manager.id,
           status: 'pending',
         })
         await fetch('/api/telegram', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: managerId,
-            message: `🔔 <b>Yeni Görev İsteği</b>\n\n${users.find(u=>u.id===currentUserId)?.name} yeni bir görev oluşturdu:\n\n📋 ${form.title}\n\nOnaylamak için uygulamayı açın.\n\n🔗 <a href="https://istakip-sigma.vercel.app/dashboard/requests">Bekleyen İstekler</a>`,
+            user_id: manager.id,
+            message: `🔔 Yeni Görev İsteği\n\n${users.find(u=>u.id===currentUserId)?.name} yeni bir görev oluşturdu:\n${form.title}\n\nhttps://istakip-sigma.vercel.app/dashboard/requests`,
           }),
         }).catch(() => {})
       }
@@ -143,10 +162,11 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
             <label className="block text-xs font-medium text-gray-500 mb-2">
               Atanan Kişiler
               {currentUserRole === 'staff' && (
-                <span className="ml-2 text-[10px] text-amber-600 font-normal">Yöneticiler için otomatik onay isteği gönderilir</span>
+                <span className="ml-2 text-[10px] text-amber-600 font-normal">Yöneticiler seçilirse onay isteği gönderilir</span>
               )}
             </label>
             <div className="space-y-2">
+              <p className="text-[10px] text-gray-400 font-medium">Çalışanlar</p>
               <div className="grid grid-cols-2 gap-2">
                 {staff.map(u => (
                   <div key={u.id}
@@ -163,25 +183,25 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
                   </div>
                 ))}
               </div>
-              {currentUserRole === 'manager' && (
-                <div className="grid grid-cols-2 gap-2">
-                  {managers.map(u => (
-                    <div key={u.id}
-                      onClick={() => toggleUser(u.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
-                        selectedUsers.includes(u.id) ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
-                      }`}>
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
-                        style={{ background: u.avatar_color, color: '#1f2937' }}>
-                        {u.name.split(' ').map((p:string) => p[0]).join('').slice(0,2)}
-                      </div>
-                      <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
-                      <span className="text-[9px] text-teal-500 ml-1">Yön.</span>
-                      {selectedUsers.includes(u.id) && <span className="ml-auto text-teal-500 text-xs">✓</span>}
+              <p className="text-[10px] text-gray-400 font-medium pt-1">
+                Yöneticiler {currentUserRole === 'staff' ? '(onay gerekir)' : ''}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {managers.map(u => (
+                  <div key={u.id}
+                    onClick={() => toggleUser(u.id)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
+                      selectedUsers.includes(u.id) ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-amber-200'
+                    }`}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                      style={{ background: u.avatar_color, color: '#1f2937' }}>
+                      {u.name.split(' ').map((p:string) => p[0]).join('').slice(0,2)}
                     </div>
-                  ))}
-                </div>
-              )}
+                    <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
+                    {selectedUsers.includes(u.id) && <span className="ml-auto text-amber-500 text-xs">✓</span>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -208,7 +228,7 @@ export default function AddTaskModal({ currentUserId, currentUserRole, users, on
             <button type="submit" disabled={loading}
               className="flex-1 py-2.5 text-sm font-medium text-white bg-teal-400 hover:bg-teal-600 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {currentUserRole === 'staff' ? 'Kaydet & Yöneticiye Bildir' : 'Kaydet'}
+              Kaydet
             </button>
           </div>
         </form>
