@@ -51,11 +51,9 @@ export default function KanbanPage() {
     ])
     if (profile) setCurrentUser(profile)
     if (allUsers) setUsers(allUsers)
-    if (allTasks) {
-      const visible = profile?.role === 'manager'
-        ? allTasks
-        : allTasks.filter((t: Task) => t.assignee_id === user.id || t.created_by === user.id)
-      setTasks(visible)
+   if (allTasks) {
+      setTasks(allTasks)
+    }
     }
   }, [])
 

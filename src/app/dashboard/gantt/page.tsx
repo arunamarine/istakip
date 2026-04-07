@@ -40,7 +40,7 @@ export default function GanttPage() {
     if (allTasks) {
       const visible = profile?.role === 'manager'
         ? allTasks.filter((t: Task) => t.start_date && t.due_date)
-        : allTasks.filter((t: Task) => (t.assignee_id === user.id || t.created_by === user.id) && t.start_date && t.due_date)
+        : allTasks.filter((t: Task) => t.start_date && t.due_date)
       setTasks(visible)
     }
   }, [])
