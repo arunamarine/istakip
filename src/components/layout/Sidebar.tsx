@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, CalendarDays, Users, Bell, KeyRound } from 'lucide-react'
+import { LayoutGrid, CalendarDays, Users, Bell, KeyRound, ClipboardList } from 'lucide-react'
 import type { Role } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -10,7 +10,8 @@ const navItems = (role: Role) => [
   { href: '/dashboard/gantt',         label: 'Takvim',         icon: CalendarDays },
   ...(role === 'manager' ? [{ href: '/dashboard/team', label: 'Ekip', icon: Users }] : []),
   { href: '/dashboard/notifications', label: 'Bildirimler',    icon: Bell },
-  { href: '/dashboard/profile',       label: 'Şifre Değiştir', icon: KeyRound },
+{ href: '/dashboard/requests',      label: 'İstekler',        icon: ClipboardList },  
+{ href: '/dashboard/profile',       label: 'Şifre Değiştir', icon: KeyRound },
 ]
 
 export default function Sidebar({ role }: { role: Role }) {

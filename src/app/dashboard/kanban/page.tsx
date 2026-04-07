@@ -160,8 +160,9 @@ export default function KanbanPage() {
         />
       )}
       {showAdd && (
-        <AddTaskModal
+      <AddTaskModal
           currentUserId={currentUser.id}
+          currentUserRole={currentUser.role}
           users={users}
           onClose={() => setShowAdd(false)}
           onAdd={load}

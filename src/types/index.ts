@@ -49,3 +49,14 @@ export interface Notification {
   is_read: boolean
   created_at: string
 }
+export interface TaskRequest {
+  id: string
+  task_id: string
+  requester_id: string
+  manager_id: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  task?: Task
+  requester?: User
+  manager?: User
+}

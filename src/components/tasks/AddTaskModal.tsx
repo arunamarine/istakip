@@ -6,12 +6,13 @@ import type { User } from '@/types'
 
 interface Props {
   currentUserId: string
+  currentUserRole: string
   users: User[]
   onClose: () => void
   onAdd: () => void
 }
 
-export default function AddTaskModal({ currentUserId, users, onClose, onAdd }: Props) {
+export default function AddTaskModal({ currentUserId, currentUserRole, users, onClose, onAdd }: Props) {
   const [form, setForm] = useState({
     title: '', description: '', priority: 'mid', start_date: '', due_date: '',
   })
@@ -25,6 +26,8 @@ export default function AddTaskModal({ currentUserId, users, onClose, onAdd }: P
   }
 
   function toggleUser(id: string) {
+    const targetUser = users.find(u => u.id === id)
+    if (currentUserRole === 'staff' && targetUser?.role === 'manager') return
     setSelectedUsers(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     )
@@ -34,12 +37,18 @@ export default function AddTaskModal({ currentUserId, users, onClose, onAdd }: P
     e.preventDefault()
     if (!form.title.trim()) { setError('Başlık zorunludur.'); return }
     setLoading(true)
+
+    const staffAssignees = selectedUsers.filter(uid => {
+      const u = users.find(x => x.id === uid)
+      return u?.role === 'staff' || uid === currentUserId
+    })
+
     const { data: task, error: taskError } = await supabase.from('tasks').insert({
       title: form.title.trim(),
       description: form.description || null,
       priority: form.priority,
       status: 'todo',
-      assignee_id: selectedUsers[0] || null,
+      assignee_id: staffAssignees[0] || currentUserId,
       created_by: currentUserId,
       start_date: form.start_date || null,
       due_date: form.due_date || null,
@@ -47,13 +56,12 @@ export default function AddTaskModal({ currentUserId, users, onClose, onAdd }: P
 
     if (taskError || !task) { setError('Görev eklenirken hata oluştu.'); setLoading(false); return }
 
-if (selectedUsers.length > 0) {
+    if (staffAssignees.length > 0) {
       await supabase.from('task_assignees').insert(
-        selectedUsers.map(uid => ({ task_id: task.id, user_id: uid }))
+        staffAssignees.map(uid => ({ task_id: task.id, user_id: uid }))
       )
-
-      for (const uid of selectedUsers) {
-        
+      for (const uid of staffAssignees) {
+        if (uid !== currentUserId) {
           await fetch('/api/telegram', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -61,15 +69,39 @@ if (selectedUsers.length > 0) {
               user_id: uid,
               message: `📋 <b>Yeni Görev Atandı</b>\n\n${form.title}\n\n🔗 <a href="https://istakip-sigma.vercel.app">Uygulamayı Aç</a>`,
             }),
-          })
+          }).catch(() => {})
         }
       }
-    
+    }
+
+    // Yöneticilere istek gönder (sadece çalışanlar için)
+    if (currentUserRole === 'staff') {
+      const managerIds = users.filter(u => u.role === 'manager').map(u => u.id)
+      for (const managerId of managerIds) {
+        await supabase.from('task_requests').insert({
+          task_id: task.id,
+          requester_id: currentUserId,
+          manager_id: managerId,
+          status: 'pending',
+        })
+        await fetch('/api/telegram', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: managerId,
+            message: `🔔 <b>Yeni Görev İsteği</b>\n\n${users.find(u=>u.id===currentUserId)?.name} yeni bir görev oluşturdu:\n\n📋 ${form.title}\n\nOnaylamak için uygulamayı açın.\n\n🔗 <a href="https://istakip-sigma.vercel.app/dashboard/requests">Bekleyen İstekler</a>`,
+          }),
+        }).catch(() => {})
+      }
+    }
 
     setLoading(false)
     onAdd()
     onClose()
   }
+
+  const managers = users.filter(u => u.role === 'manager')
+  const staff = users.filter(u => u.role === 'staff')
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
@@ -108,26 +140,48 @@ if (selectedUsers.length > 0) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2">Atanan Kişiler</label>
-            <div className="grid grid-cols-2 gap-2">
-              {users.map(u => (
-                <div key={u.id}
-                  onClick={() => toggleUser(u.id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
-                    selectedUsers.includes(u.id)
-                      ? 'border-teal-400 bg-teal-50'
-                      : 'border-gray-200 hover:border-teal-200'
-                  }`}>
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium flex-shrink-0"
-                    style={{ background: u.avatar_color, color: '#0F6E56' }}>
-                    {u.name.split(' ').map((p:string) => p[0]).join('').slice(0,2)}
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Atanan Kişiler
+              {currentUserRole === 'staff' && (
+                <span className="ml-2 text-[10px] text-amber-600 font-normal">Yöneticiler için otomatik onay isteği gönderilir</span>
+              )}
+            </label>
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                {staff.map(u => (
+                  <div key={u.id}
+                    onClick={() => toggleUser(u.id)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
+                      selectedUsers.includes(u.id) ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
+                    }`}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                      style={{ background: u.avatar_color, color: '#1f2937' }}>
+                      {u.name.split(' ').map((p:string) => p[0]).join('').slice(0,2)}
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
+                    {selectedUsers.includes(u.id) && <span className="ml-auto text-teal-500 text-xs">✓</span>}
                   </div>
-                  <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
-                  {selectedUsers.includes(u.id) && (
-                    <span className="ml-auto text-teal-500 text-xs">✓</span>
-                  )}
+                ))}
+              </div>
+              {currentUserRole === 'manager' && (
+                <div className="grid grid-cols-2 gap-2">
+                  {managers.map(u => (
+                    <div key={u.id}
+                      onClick={() => toggleUser(u.id)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all ${
+                        selectedUsers.includes(u.id) ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
+                      }`}>
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                        style={{ background: u.avatar_color, color: '#1f2937' }}>
+                        {u.name.split(' ').map((p:string) => p[0]).join('').slice(0,2)}
+                      </div>
+                      <span className="text-xs font-medium text-gray-700 truncate">{u.name.split(' ')[0]}</span>
+                      <span className="text-[9px] text-teal-500 ml-1">Yön.</span>
+                      {selectedUsers.includes(u.id) && <span className="ml-auto text-teal-500 text-xs">✓</span>}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -154,7 +208,7 @@ if (selectedUsers.length > 0) {
             <button type="submit" disabled={loading}
               className="flex-1 py-2.5 text-sm font-medium text-white bg-teal-400 hover:bg-teal-600 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Kaydet
+              {currentUserRole === 'staff' ? 'Kaydet & Yöneticiye Bildir' : 'Kaydet'}
             </button>
           </div>
         </form>
