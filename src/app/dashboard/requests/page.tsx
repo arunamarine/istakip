@@ -38,6 +38,12 @@ export default function RequestsPage() {
   async function handleApprove(req: any) {
     await supabase.from('task_requests').update({ status: 'approved' }).eq('id', req.id)
     await supabase.from('task_assignees').upsert({ task_id: req.task_id, user_id: currentUser.id })
+await supabase.from('notifications').insert({
+      user_id: req.requester_id,
+      title: 'Görev İsteği Onaylandı',
+      body: `"${req.task?.title}" görevi onaylandı. ${currentUser.name} göreve dahil oldu.`,
+      task_id: req.task_id,
+    })
     await fetch('/api/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -52,7 +58,13 @@ export default function RequestsPage() {
 
   async function handleReject(req: any) {
     await supabase.from('task_requests').update({ status: 'rejected' }).eq('id', req.id)
-    await fetch('/api/telegram', {
+  await supabase.from('notifications').insert({
+      user_id: req.requester_id,
+      title: 'Görev İsteği Reddedildi',
+      body: `"${req.task?.title}" görev isteğiniz reddedildi.`,
+      task_id: req.task_id,
+    })  
+await fetch('/api/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -69,7 +81,21 @@ export default function RequestsPage() {
     await supabase.from('task_requests').update({ status: 'approved' }).eq('id', req.id)
     await supabase.from('task_assignees').upsert({ task_id: req.task_id, user_id: targetUserId })
     await supabase.from('tasks').update({ assignee_id: targetUserId }).eq('id', req.task_id)
-    await fetch('/api/telegram', {
+await supabase.from('notifications').insert([
+      {
+        user_id: req.requester_id,
+        title: 'Görev İsteği Onaylandı',
+        body: `"${req.task?.title}" görevi ${targetUser?.name} kişisine yönlendirildi.`,
+        task_id: req.task_id,
+      },
+      {
+        user_id: targetUserId,
+        title: 'Görev Size Atandı',
+        body: `"${req.task?.title}" görevi ${currentUser.name} tarafından size yönlendirildi.`,
+        task_id: req.task_id,
+      }
+    ])    
+await fetch('/api/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
